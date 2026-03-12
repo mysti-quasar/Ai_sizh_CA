@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Monitor – SIZH AI</title>
+  <style>
+    /* ── Reset ──────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1117;
+      color: #e1e4e8;
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── Header ─────────────────────────────────── */
+    .header {
+      background: #1a1d27;
+      border-bottom: 1px solid #2d313a;
+      padding: 22px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo { width: 40px; height: 40px; background: linear-gradient(135deg,#6366f1,#8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; }
+    .header h1 { font-size: 1.2rem; font-weight: 700; color: #f0f0f0; }
+    .header h1 span { color: #818cf8; }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; background: rgba(99,102,241,.12); color: #a5b4fc; border: 1px solid rgba(99,102,241,.25); padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; transition: background .15s; }
+    .back-btn:hover { background: rgba(99,102,241,.22); }
+
+    /* ── Stats Bar ──────────────────────────────── */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      padding: 22px 36px 8px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: #1a1d27;
+      border: 1px solid #2d313a;
+      border-radius: 12px;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 150px;
+    }
+    .stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .8px; color: #6b7280; font-weight: 600; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: #f0f0f0; }
+    .stat-icon { font-size: 1.2rem; }
+
+    /* ── Tabs ────────────────────────────────────── */
+    .tabs-wrap { padding: 24px 36px 0; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid #2d313a; }
+    .tab-btn {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #6b7280;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn:hover { color: #a5b4fc; }
+    .tab-btn.active { color: #818cf8; border-bottom-color: #818cf8; }
+    .tab-count {
+      background: rgba(99,102,241,.15);
+      color: #a5b4fc;
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+
+    /* ── Controls ────────────────────────────────── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      padding: 18px 36px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 220px; max-width: 400px; }
+    .search-wrap input {
+      width: 100%;
+      background: #1a1d27;
+      border: 1px solid #2d313a;
+      border-radius: 8px;
+      padding: 9px 14px 9px 38px;
+      color: #e1e4e8;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .search-wrap input:focus { border-color: #6366f1; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.9rem; }
+    .filter-select {
+      background: #1a1d27;
+      border: 1px solid #2d313a;
+      border-radius: 8px;
+      padding: 9px 14px;
+      color: #e1e4e8;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .filter-select:focus { border-color: #6366f1; }
+    .refresh-btn {
+      background: rgba(99,102,241,.12);
+      border: 1px solid rgba(99,102,241,.25);
+      color: #a5b4fc;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .refresh-btn:hover { background: rgba(99,102,241,.22); }
+    .result-info { margin-left: auto; font-size: 0.78rem; color: #6b7280; }
+
+    /* ── Table ───────────────────────────────────── */
+    .table-wrap { padding: 0 36px 40px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    thead th {
+      background: #14161e;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: #6b7280;
+      border-bottom: 1px solid #2d313a;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { color: #a5b4fc; }
+    tbody tr {
+      border-bottom: 1px solid #1e2029;
+      transition: background .12s;
+    }
+    tbody tr:hover { background: rgba(99,102,241,.05); }
+    tbody td { padding: 12px 14px; color: #c9ccd6; vertical-align: middle; }
+    .td-main { color: #f0f0f0; font-weight: 600; }
+    .empty-row td { text-align: center; padding: 50px 14px; color: #555a6e; font-size: 0.9rem; }
+
+    /* ── Badges ──────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge-green  { background: rgba(34,197,94,.12); color: #4ade80; }
+    .badge-blue   { background: rgba(99,102,241,.12); color: #a5b4fc; }
+    .badge-amber  { background: rgba(251,191,36,.12); color: #fbbf24; }
+    .badge-rose   { background: rgba(251,113,133,.12); color: #f87171; }
+    .badge-violet { background: rgba(167,139,250,.12); color: #c4b5fd; }
+    .badge-gray   { background: rgba(107,114,128,.12); color: #9ca3af; }
+    .badge-teal   { background: rgba(20,184,166,.12); color: #2dd4bf; }
+    .badge-custom { background: rgba(251,191,36,.12); color: #fbbf24; border: 1px dashed #fbbf2455; }
+
+    /* ── Mono text ───────────────────────────────── */
+    .mono { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.78rem; color: #9ca3af; }
+
+    /* ── Hidden ──────────────────────────────────── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Responsive ──────────────────────────────── */
+    @media (max-width: 640px) {
+      .header, .stats-bar, .controls, .table-wrap, .tabs-wrap { padding-left: 14px; padding-right: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">S</div>
+    <h1><span>SIZH AI</span> – Data Monitor</h1>
+  </div>
+  <a href="/" class="back-btn">← Back to Dashboard</a>
+</header>
+
+<!-- ── Stats Bar ────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <span class="stat-icon">👥</span>
+    <span class="stat-label">Total Clients</span>
+    <span class="stat-value" id="stat-clients">{{ total_clients }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">📚</span>
+    <span class="stat-label">Client Ledgers</span>
+    <span class="stat-value" id="stat-ledgers">{{ total_client_ledgers }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🗒️</span>
+    <span class="stat-label">Tally Ledgers</span>
+    <span class="stat-value" id="stat-tally">{{ total_tally_ledgers }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🏷️</span>
+    <span class="stat-label">Ledger Groups</span>
+    <span class="stat-value" id="stat-groups">{{ total_ledger_groups }}</span>
+  </div>
+</div>
+
+<!-- ── Tabs ─────────────────────────────────────────────── -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('clients', this)">
+      👥 Clients <span class="tab-count">{{ total_clients }}</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('ledgers', this)">
+      📚 Client Ledgers <span class="tab-count">{{ total_client_ledgers }}</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('tally', this)">
+      🗒️ Tally Ledgers <span class="tab-count">{{ total_tally_ledgers }}</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('groups', this)">
+      🏷️ Ledger Groups <span class="tab-count">{{ total_ledger_groups }}</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── Controls ─────────────────────────────────────────── -->
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Search by name, GSTIN, email…" oninput="applyFilters()" />
+  </div>
+
+  <!-- Client filter -->
+  <select class="filter-select" id="filter-gst" style="display:none" onchange="applyFilters()">
+    <option value="">All GST Types</option>
+    <option value="regular">Regular</option>
+    <option value="composition">Composition</option>
+    <option value="unregistered">Unregistered</option>
+    <option value="isd">ISD</option>
+  </select>
+
+  <!-- Ledger group filter -->
+  <select class="filter-select" id="filter-group" style="display:none" onchange="applyFilters()">
+    <option value="">All Groups</option>
+    {% for g in ledger_groups %}
+    <option value="{{ g.name }}">{{ g.name }}</option>
+    {% endfor %}
+  </select>
+
+  <!-- Active filter -->
+  <select class="filter-select" id="filter-active" style="display:none" onchange="applyFilters()">
+    <option value="">All Status</option>
+    <option value="true">Active</option>
+    <option value="false">Inactive</option>
+  </select>
+
+  <button class="refresh-btn" onclick="window.location.reload()">⟳ Refresh</button>
+  <span class="result-info" id="result-info"></span>
+</div>
+
+<!-- ── Tab Panels ────────────────────────────────────────── -->
+
+<!-- Clients Table -->
+<div class="table-wrap">
+  <div class="tab-panel active" id="panel-clients">
+    <table id="table-clients">
+      <thead>
+        <tr>
+          <th onclick="sortTable('table-clients',0)">#</th>
+          <th onclick="sortTable('table-clients',1)">Client Name ↕</th>
+          <th onclick="sortTable('table-clients',2)">Trade / Business Name ↕</th>
+          <th onclick="sortTable('table-clients',3)">GSTIN ↕</th>
+          <th onclick="sortTable('table-clients',4)">PAN</th>
+          <th onclick="sortTable('table-clients',5)">GST Type ↕</th>
+          <th onclick="sortTable('table-clients',6)">Industry</th>
+          <th onclick="sortTable('table-clients',7)">Email</th>
+          <th onclick="sortTable('table-clients',8)">Phone</th>
+          <th onclick="sortTable('table-clients',9)">State</th>
+          <th onclick="sortTable('table-clients',10)">Created</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-clients">
+        {% for c in clients %}
+        <tr
+          data-name="{{ c.name|lower }}"
+          data-trade="{{ c.trade_name|lower }}"
+          data-gstin="{{ c.gstin|lower }}"
+          data-email="{{ c.email|lower }}"
+          data-gsttype="{{ c.gst_type }}"
+        >
+          <td class="mono">{{ forloop.counter }}</td>
+          <td class="td-main">{{ c.name }}</td>
+          <td>{{ c.trade_name|default:"—" }}</td>
+          <td class="mono">{{ c.gstin|default:"—" }}</td>
+          <td class="mono">{{ c.pan|default:"—" }}</td>
+          <td>
+            {% if c.gst_type == "regular" %}<span class="badge badge-green">Regular</span>
+            {% elif c.gst_type == "composition" %}<span class="badge badge-blue">Composition</span>
+            {% elif c.gst_type == "unregistered" %}<span class="badge badge-gray">Unregistered</span>
+            {% else %}<span class="badge badge-amber">{{ c.gst_type|capfirst }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.industry_type %}<span class="badge badge-violet">{{ c.industry_type|capfirst }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ c.email|default:"—" }}</td>
+          <td class="mono">{{ c.phone|default:"—" }}</td>
+          <td>{{ c.state|default:"—" }}</td>
+          <td class="mono">{{ c.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row"><td colspan="11">No clients found in the database.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Client Ledgers Table -->
+  <div class="tab-panel" id="panel-ledgers">
+    <table id="table-ledgers">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th onclick="sortTable('table-ledgers',1)">Ledger Name ↕</th>
+          <th onclick="sortTable('table-ledgers',2)">Client ↕</th>
+          <th onclick="sortTable('table-ledgers',3)">Group ↕</th>
+          <th onclick="sortTable('table-ledgers',4)">Sub-Category</th>
+          <th onclick="sortTable('table-ledgers',5)">Opening Balance</th>
+          <th onclick="sortTable('table-ledgers',6)">Custom?</th>
+          <th onclick="sortTable('table-ledgers',7)">Status ↕</th>
+          <th onclick="sortTable('table-ledgers',8)">Created</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-ledgers">
+        {% for l in client_ledgers %}
+        <tr
+          data-name="{{ l.name|lower }}"
+          data-client="{{ l.client_profile.name|lower }}"
+          data-group="{{ l.group.name|lower }}"
+          data-groupname="{{ l.group.name }}"
+          data-active="{{ l.is_active|lower }}"
+        >
+          <td class="mono">{{ forloop.counter }}</td>
+          <td class="td-main">{{ l.name }}</td>
+          <td>{{ l.client_profile.name }}</td>
+          <td><span class="badge badge-blue">{{ l.group.name }}</span></td>
+          <td>{{ l.sub_category|default:"—" }}</td>
+          <td class="mono">₹ {{ l.opening_balance }}</td>
+          <td>
+            {% if l.is_custom %}<span class="badge badge-custom">Custom</span>
+            {% else %}<span class="badge badge-gray">Template</span>{% endif %}
+          </td>
+          <td>
+            {% if l.is_active %}<span class="badge badge-green">Active</span>
+            {% else %}<span class="badge badge-rose">Inactive</span>{% endif %}
+          </td>
+          <td class="mono">{{ l.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row"><td colspan="9">No client ledgers found in the database.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tally Ledgers Table -->
+  <div class="tab-panel" id="panel-tally">
+    <table id="table-tally">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th onclick="sortTable('table-tally',1)">Ledger Name ↕</th>
+          <th onclick="sortTable('table-tally',2)">Client ↕</th>
+          <th onclick="sortTable('table-tally',3)">Group ↕</th>
+          <th onclick="sortTable('table-tally',4)">Parent Group</th>
+          <th onclick="sortTable('table-tally',5)">Tax Category</th>
+          <th onclick="sortTable('table-tally',6)">GSTIN</th>
+          <th onclick="sortTable('table-tally',7)">Opening Bal</th>
+          <th onclick="sortTable('table-tally',8)">Status ↕</th>
+          <th onclick="sortTable('table-tally',9)">Synced</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-tally">
+        {% for t in tally_ledgers %}
+        <tr
+          data-name="{{ t.name|lower }}"
+          data-client="{{ t.client_profile.name|lower }}"
+          data-group="{{ t.group|lower }}"
+          data-active="{{ t.is_active|lower }}"
+        >
+          <td class="mono">{{ forloop.counter }}</td>
+          <td class="td-main">{{ t.name }}</td>
+          <td>{{ t.client_profile.name }}</td>
+          <td><span class="badge badge-teal">{{ t.group|default:"—" }}</span></td>
+          <td>{{ t.parent_group|default:"—" }}</td>
+          <td>
+            {% if t.tax_category == "gst" %}<span class="badge badge-green">GST</span>
+            {% elif t.tax_category == "tds" %}<span class="badge badge-amber">TDS</span>
+            {% elif t.tax_category == "tcs" %}<span class="badge badge-violet">TCS</span>
+            {% else %}<span class="badge badge-gray">None</span>{% endif %}
+          </td>
+          <td class="mono">{{ t.gstin|default:"—" }}</td>
+          <td class="mono">₹ {{ t.opening_balance }}</td>
+          <td>
+            {% if t.is_active %}<span class="badge badge-green">Active</span>
+            {% else %}<span class="badge badge-rose">Inactive</span>{% endif %}
+          </td>
+          <td class="mono">{{ t.synced_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row"><td colspan="10">No Tally ledgers found in the database.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Ledger Groups Table -->
+  <div class="tab-panel" id="panel-groups">
+    <table id="table-groups">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th onclick="sortTable('table-groups',1)">Group Name ↕</th>
+          <th onclick="sortTable('table-groups',2)">Code ↕</th>
+          <th onclick="sortTable('table-groups',3)">Nature ↕</th>
+          <th onclick="sortTable('table-groups',4)">Description</th>
+          <th onclick="sortTable('table-groups',5)">Order</th>
+          <th onclick="sortTable('table-groups',6)">Client Ledgers</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-groups">
+        {% for g in ledger_groups %}
+        <tr data-name="{{ g.name|lower }}" data-code="{{ g.code|lower }}">
+          <td class="mono">{{ forloop.counter }}</td>
+          <td class="td-main">{{ g.name }}</td>
+          <td class="mono">{{ g.code }}</td>
+          <td>
+            {% if g.nature == "debit" %}<span class="badge badge-rose">Debit</span>
+            {% else %}<span class="badge badge-green">Credit</span>{% endif %}
+          </td>
+          <td>{{ g.description|default:"—"|truncatechars:60 }}</td>
+          <td class="mono">{{ g.display_order }}</td>
+          <td class="mono">{{ g.client_ledgers.count }}</td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row"><td colspan="7">No ledger groups found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── JavaScript ───────────────────────────────────────── -->
+<script>
+  const TABS = ['clients','ledgers','tally','groups'];
+  let currentTab = 'clients';
+
+  /* ── Tab Switcher ──────────────────────────── */
+  function switchTab(tab, btn) {
+    currentTab = tab;
+    TABS.forEach(t => {
+      document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+    });
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // toggle relevant filter controls
+    document.getElementById('filter-gst').style.display    = tab === 'clients' ? 'block' : 'none';
+    document.getElementById('filter-group').style.display  = (tab === 'ledgers' || tab === 'tally') ? 'block' : 'none';
+    document.getElementById('filter-active').style.display = (tab === 'ledgers' || tab === 'tally') ? 'block' : 'none';
+
+    document.getElementById('search-input').value = '';
+    applyFilters();
+  }
+
+  /* ── Filter & Search ───────────────────────── */
+  function applyFilters() {
+    const q      = document.getElementById('search-input').value.toLowerCase().trim();
+    const gst    = document.getElementById('filter-gst').value.toLowerCase();
+    const group  = document.getElementById('filter-group').value.toLowerCase();
+    const active = document.getElementById('filter-active').value.toLowerCase();
+
+    const tbody = document.getElementById('tbody-' + currentTab);
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr:not(.empty-row)'));
+
+    let visible = 0;
+    rows.forEach(row => {
+      let show = true;
+
+      /* text search across all data-* attributes */
+      if (q) {
+        const haystack = Object.values(row.dataset).join(' ');
+        show = haystack.includes(q);
+      }
+
+      /* gst type filter (clients) */
+      if (show && gst && row.dataset.gsttype) {
+        show = row.dataset.gsttype === gst;
+      }
+
+      /* group filter (ledgers / tally) */
+      if (show && group) {
+        const rowGroup = (row.dataset.group || row.dataset.groupname || '').toLowerCase();
+        show = rowGroup.includes(group);
+      }
+
+      /* active filter */
+      if (show && active && row.dataset.active !== undefined) {
+        show = row.dataset.active === active;
+      }
+
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    document.getElementById('result-info').textContent =
+      q || gst || group || active ? `Showing ${visible} of ${rows.length} records` : '';
+  }
+
+  /* ── Sort ──────────────────────────────────── */
+  const sortState = {};
+  function sortTable(tableId, colIndex) {
+    const table  = document.getElementById(tableId);
+    const tbody  = table.querySelector('tbody');
+    const rows   = Array.from(tbody.querySelectorAll('tr:not(.empty-row)'));
+    const key    = tableId + '_' + colIndex;
+    const asc    = sortState[key] !== true;
+    sortState[key] = asc;
+
+    rows.sort((a, b) => {
+      const ta = (a.cells[colIndex]?.innerText || '').trim().toLowerCase();
+      const tb = (b.cells[colIndex]?.innerText || '').trim().toLowerCase();
+      const na = parseFloat(ta.replace(/[^0-9.-]/g, ''));
+      const nb = parseFloat(tb.replace(/[^0-9.-]/g, ''));
+      if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
+      return asc ? ta.localeCompare(tb) : tb.localeCompare(ta);
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+  }
+
+  /* ── Init ──────────────────────────────────── */
+  document.getElementById('result-info').textContent = '';
+</script>
+</body>
+</html>

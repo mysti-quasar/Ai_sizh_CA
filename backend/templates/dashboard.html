@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIZH AI – Backend Dashboard</title>
+  <style>
+    /* ── Reset & Base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #0f1117;
+      color: #e1e4e8;
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #1a1d27 0%, #252830 100%);
+      border-bottom: 1px solid #2d313a;
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700; color: #fff;
+    }
+    .header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #f0f0f0;
+      letter-spacing: -0.3px;
+    }
+    .header h1 span { color: #818cf8; }
+    .header-badge {
+      font-size: 0.7rem;
+      background: rgba(99,102,241,.15);
+      color: #a5b4fc;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+    }
+
+    /* ── Sub-header ─────────────────────────────────────────── */
+    .sub-header {
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sub-header p { color: #8b8fa3; font-size: 0.92rem; }
+    .status-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      font-size: 0.72rem;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .pill.green  { background: rgba(34,197,94,.12); color: #4ade80; }
+    .pill.blue   { background: rgba(99,102,241,.12); color: #a5b4fc; }
+    .pill.amber  { background: rgba(251,191,36,.12); color: #fbbf24; }
+    .pill-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      display: inline-block;
+    }
+    .pill.green .pill-dot  { background: #4ade80; }
+    .pill.blue .pill-dot   { background: #a5b4fc; }
+    .pill.amber .pill-dot  { background: #fbbf24; }
+
+    /* ── Cards Grid ─────────────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 22px;
+      padding: 8px 40px 40px;
+    }
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2d313a;
+      border-radius: 14px;
+      padding: 26px 28px;
+      transition: transform .18s, border-color .18s, box-shadow .18s;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #6366f1;
+      box-shadow: 0 8px 30px rgba(99,102,241,.12);
+    }
+    .card-icon {
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .card h3 {
+      font-size: 1.08rem;
+      font-weight: 600;
+      color: #f0f0f0;
+    }
+    .card p {
+      font-size: 0.85rem;
+      color: #8b8fa3;
+      line-height: 1.55;
+      flex: 1;
+    }
+    .card-endpoint {
+      font-size: 0.75rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: #6b7280;
+      background: #14161e;
+      padding: 6px 10px;
+      border-radius: 8px;
+      display: inline-block;
+      word-break: break-all;
+    }
+    .card-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .18s, transform .12s;
+      color: #fff;
+    }
+    .card-btn:hover { transform: translateY(-1px); }
+    .card-btn svg { width: 15px; height: 15px; }
+
+    /* ── Color Variants ─────────────────────────────────────── */
+    .bg-indigo   { background: rgba(99,102,241,.14); }
+    .bg-emerald  { background: rgba(16,185,129,.14); }
+    .bg-sky      { background: rgba(56,189,248,.14); }
+    .bg-amber    { background: rgba(251,191,36,.14); }
+    .bg-rose     { background: rgba(251,113,133,.14); }
+    .bg-violet   { background: rgba(167,139,250,.14); }
+
+    .btn-indigo  { background: #6366f1; }
+    .btn-indigo:hover  { background: #5558e6; }
+    .btn-emerald { background: #10b981; }
+    .btn-emerald:hover { background: #0fa874; }
+    .btn-sky     { background: #0ea5e9; }
+    .btn-sky:hover     { background: #0d96d4; }
+    .btn-amber   { background: #f59e0b; }
+    .btn-amber:hover   { background: #e09209; }
+    .btn-rose    { background: #f43f5e; }
+    .btn-rose:hover    { background: #e03652; }
+    .btn-violet  { background: #8b5cf6; }
+    .btn-violet:hover  { background: #7c4fe6; }
+
+    /* ── Upcoming Section ───────────────────────────────────── */
+    .section-title {
+      padding: 30px 40px 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #555a6e;
+    }
+    .upcoming-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 16px;
+      padding: 8px 40px 50px;
+    }
+    .upcoming-card {
+      background: #15171f;
+      border: 1px dashed #2d313a;
+      border-radius: 12px;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      opacity: .55;
+      transition: opacity .2s;
+    }
+    .upcoming-card:hover { opacity: .8; }
+    .upcoming-card h4 {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #9ca3af;
+    }
+    .upcoming-card p {
+      font-size: 0.78rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+    .badge-soon {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: rgba(99,102,241,.1);
+      color: #818cf8;
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      padding: 20px 40px;
+      font-size: 0.78rem;
+      color: #4b5060;
+      border-top: 1px solid #1e2029;
+    }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .header, .sub-header, .grid, .upcoming-grid, .section-title { padding-left: 18px; padding-right: 18px; }
+      .header h1 { font-size: 1.1rem; }
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* ══════════════════════════════════════════
+       MODAL SYSTEM
+    ══════════════════════════════════════════ */
+    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .card-btn-outline {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; background: transparent; border: 1px solid #2d313a; color: #9ca3af;
+      transition: background .15s;
+    }
+    .card-btn-outline:hover { background: #14161e; color: #e1e4e8; }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.78);
+      z-index: 1000; align-items: flex-start; justify-content: center;
+      padding: 36px 16px; overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #1a1d27; border: 1px solid #2d313a; border-radius: 18px;
+      width: 100%; max-width: 1100px; min-height: 400px;
+      display: flex; flex-direction: column;
+      animation: slideIn .22s ease;
+    }
+    @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header {
+      padding: 20px 26px; border-bottom: 1px solid #2d313a;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .modal-title { font-size: 1.12rem; font-weight: 700; color: #f0f0f0; }
+    .modal-close {
+      background: none; border: 1px solid #2d313a; color: #9ca3af; width: 34px; height: 34px;
+      border-radius: 8px; cursor: pointer; font-size: 1.05rem; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: #2d313a; color: #f0f0f0; }
+    .modal-body { padding: 20px 26px; flex: 1; }
+
+    /* Modal Tabs */
+    .mtabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #2d313a; }
+    .mtab { padding: 8px 18px; border: none; background: none; color: #6b7280; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s; }
+    .mtab.active { color: #818cf8; border-bottom-color: #818cf8; }
+    .mtab-panel { display: none; }
+    .mtab-panel.active { display: block; }
+
+    /* Modal Controls */
+    .mcontrols { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+    .msearch { position: relative; flex: 1; min-width: 200px; max-width: 340px; }
+    .msearch input { width: 100%; background: #14161e; border: 1px solid #2d313a; border-radius: 8px; padding: 8px 12px 8px 34px; color: #e1e4e8; font-size: 0.83rem; outline: none; }
+    .msearch input:focus { border-color: #6366f1; }
+    .msearch-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.83rem; }
+    .mfilter { background: #14161e; border: 1px solid #2d313a; border-radius: 8px; padding: 8px 12px; color: #e1e4e8; font-size: 0.82rem; outline: none; cursor: pointer; }
+    .mstats { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .mstat { background: #14161e; border: 1px solid #2d313a; border-radius: 10px; padding: 10px 16px; }
+    .mstat-val { font-size: 1.5rem; font-weight: 700; color: #f0f0f0; }
+    .mstat-lbl { font-size: 0.7rem; color: #6b7280; text-transform: uppercase; letter-spacing: .6px; }
+
+    /* Modal Table */
+    .mtable-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    thead th { background: #14161e; padding: 10px 12px; text-align: left; font-size: 0.69rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #6b7280; border-bottom: 1px solid #2d313a; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid #1e2029; transition: background .1s; }
+    tbody tr:hover { background: rgba(99,102,241,.05); }
+    tbody td { padding: 10px 12px; color: #c9ccd6; vertical-align: middle; }
+    .td-main { color: #f0f0f0; font-weight: 600; }
+    .empty-msg { text-align: center; padding: 40px; color: #555a6e; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; }
+    .bg-green  { background: rgba(34,197,94,.12);  color: #4ade80; }
+    .bg-blue   { background: rgba(99,102,241,.12); color: #a5b4fc; }
+    .bg-amber2 { background: rgba(251,191,36,.12); color: #fbbf24; }
+    .bg-rose2  { background: rgba(251,113,133,.12);color: #f87171; }
+    .bg-gray2  { background: rgba(107,114,128,.12);color: #9ca3af; }
+    .bg-teal   { background: rgba(20,184,166,.12); color: #2dd4bf; }
+    .spinner { display: flex; justify-content: center; align-items: center; height: 100px; font-size: 2rem; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .pwd-form { display: flex; gap: 5px; margin-top: 3px; }
+    .pwd-form input { flex: 1; background: #14161e; border: 1px solid #2d313a; border-radius: 6px; padding: 4px 8px; color: #e1e4e8; font-size: 0.76rem; outline: none; min-width: 90px; }
+    .pwd-form input:focus { border-color: #6366f1; }
+    .pwd-btn { padding: 4px 10px; background: #6366f1; border: none; border-radius: 6px; color: #fff; font-size: 0.73rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .pwd-btn:hover { background: #5558e6; }
+    .toggle-btn { padding: 3px 10px; border-radius: 20px; font-size: 0.69rem; font-weight: 600; cursor: pointer; border: none; }
+    .toggle-on  { background: rgba(34,197,94,.12);  color: #4ade80; }
+    .toggle-off { background: rgba(251,113,133,.12); color: #f87171; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo-icon">S</div>
+      <div>
+        <h1><span>SIZH AI</span> – Smart Accounting Automation Platform</h1>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <a href="/monitor/" style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,.12);color:#4ade80;border:1px solid rgba(16,185,129,.25);padding:8px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;text-decoration:none;">📊 View Data</a>
+      <a href="/admin/" style="display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,.12);color:#a5b4fc;border:1px solid rgba(99,102,241,.25);padding:8px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;text-decoration:none;">🛡️ Django Admin</a>
+      <span class="header-badge">⚙️ DEVELOPER DASHBOARD</span>
+    </div>
+  </header>
+
+  <!-- ── Sub-header ──────────────────────────────────────── -->
+  <div class="sub-header">
+    <p>Backend Control Panel &mdash; Click <strong style="color:#e1e4e8">Open Module</strong> to manage each section</p>
+    <div class="status-pills">
+      <span class="pill green"><span class="pill-dot"></span> Backend Running</span>
+      <span class="pill blue"><span class="pill-dot"></span> API v1</span>
+      <span class="pill amber"><span class="pill-dot"></span> Dev Mode</span>
+    </div>
+  </div>
+
+  <!-- ── Module Cards ────────────────────────────────────── -->
+  <div class="grid" id="modules-grid">
+    <!-- Cards injected by JS -->
+  </div>
+
+  <!-- ── Upcoming Features ───────────────────────────────── -->
+  <div class="section-title">🚀 Upcoming Modules</div>
+  <div class="upcoming-grid" id="upcoming-grid">
+    <!-- Cards injected by JS -->
+  </div>
+
+  <!-- ── Footer ──────────────────────────────────────────── -->
+  <footer class="footer">
+    SIZH AI &copy; 2026 &mdash; Accounting Automation Platform &middot; Built with Django &amp; Next.js
+  </footer>
+
+  <!-- ── JavaScript ──────────────────────────────────────── -->
+  <script>
+    const modules = [
+      { title:"Admin Panel",          icon:"🛡️",  iconBg:"bg-indigo",  btnClass:"btn-indigo",
+        description:"Manage users, roles, permissions and system configuration via Django Admin.",
+        endpoint:"/admin/",  modal:null },
+      { title:"Authentication",       icon:"🔐",  iconBg:"bg-emerald", btnClass:"btn-emerald",
+        description:"JWT auth — register, login, token refresh, password management and user roles.",
+        endpoint:"/api/auth/", modal:"auth" },
+      { title:"Clients Management",   icon:"👥",  iconBg:"bg-sky",     btnClass:"btn-sky",
+        description:"Manage client profiles, GST details, PAN, business entities and sub-users.",
+        endpoint:"/api/clients/", modal:"clients" },
+      { title:"Documents Processing", icon:"📄",  iconBg:"bg-amber",   btnClass:"btn-amber",
+        description:"Upload invoices, bills and documents. AI-powered data extraction pipeline.",
+        endpoint:"/api/documents/", modal:"documents" },
+      { title:"Masters Data",         icon:"📚",  iconBg:"bg-violet",  btnClass:"btn-violet",
+        description:"Chart of Accounts, ledger groups, client ledgers, Tally sync and tax codes.",
+        endpoint:"/api/masters/", modal:"masters" },
+      { title:"Transactions System",  icon:"💰",  iconBg:"bg-rose",    btnClass:"btn-rose",
+        description:"Upload jobs, sales, purchases, journal entries, vouchers and Tally export.",
+        endpoint:"/api/transactions/", modal:"transactions" },
+    ];
+    const upcoming = [
+      { title:"🤖 AI Document Processing", description:"Gemini-powered invoice parsing, auto-categorization and smart data extraction." },
+      { title:"🎙️ Voice Accounting",       description:"Record transactions using voice commands with AI transcription." },
+      { title:"📊 GST Automation",         description:"Auto-generate GSTR-1, GSTR-3B returns and reconcile with GSTN portal." },
+      { title:"📝 ITR Filing",             description:"Automated Income Tax Return preparation, computation and e-filing." },
+    ];
+
+    /* Render Cards */
+    const grid = document.getElementById("modules-grid");
+    modules.forEach(m => {
+      const card = document.createElement("div");
+      card.className = "card";
+      const mainBtn = m.modal
+        ? `<button class="card-btn ${m.btnClass}" onclick="openModal('${m.modal}')">Open Module →</button>`
+        : `<a href="${m.endpoint}" class="card-btn ${m.btnClass}">Open Module →</a>`;
+      const apiLink = m.modal ? `<a href="${m.endpoint}" class="card-btn-outline" target="_blank" style="text-decoration:none">API</a>` : "";
+      card.innerHTML = `
+        <div class="card-icon ${m.iconBg}">${m.icon}</div>
+        <h3>${m.title}</h3>
+        <p>${m.description}</p>
+        <div class="card-endpoint">${m.endpoint}</div>
+        <div class="card-actions">${mainBtn}${apiLink}</div>`;
+      grid.appendChild(card);
+    });
+    const upGrid = document.getElementById("upcoming-grid");
+    upcoming.forEach(u => {
+      const c = document.createElement("div");
+      c.className = "upcoming-card";
+      c.innerHTML = `<h4>${u.title}</h4><p>${u.description}</p><span class="badge-soon">COMING SOON</span>`;
+      upGrid.appendChild(c);
+    });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════
+       MODALS
+  ═══════════════════════════════════════════════════ -->
+
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="modal-auth">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🔐 Authentication — User Management</div>
+        <button class="modal-close" onclick="closeModal('auth')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="mstats" id="auth-stats"></div>
+        <div class="mcontrols">
+          <div class="msearch"><span class="msearch-icon">🔍</span><input type="text" id="auth-search" placeholder="Search username, email…" oninput="filterTable('auth-tbody','auth-search')" /></div>
+          <select class="mfilter" id="auth-role-filter" onchange="filterTable('auth-tbody','auth-search','auth-role-filter','data-role')">
+            <option value="">All Roles</option><option value="Superuser">Superuser</option><option value="Staff">Staff</option><option value="User">User</option>
+          </select>
+          <a href="/api/auth/register/" class="card-btn btn-emerald" style="padding:8px 14px;font-size:0.78rem;text-decoration:none;border-radius:8px">+ Register User</a>
+        </div>
+        <div class="mtable-wrap">
+          <table><thead><tr><th>#</th><th>Username</th><th>Email</th><th>Name</th><th>Role</th><th>Status</th><th>Joined</th><th>Last Login</th><th>Set Password</th></tr></thead>
+          <tbody id="auth-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTS MODAL -->
+  <div class="modal-overlay" id="modal-clients">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">👥 Clients Management</div>
+        <button class="modal-close" onclick="closeModal('clients')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="mstats" id="clients-stats"></div>
+        <div class="mcontrols">
+          <div class="msearch"><span class="msearch-icon">🔍</span><input type="text" id="clients-search" placeholder="Search name, GSTIN, PAN, email…" oninput="filterTable('clients-tbody','clients-search')" /></div>
+          <select class="mfilter" id="clients-gst-filter" onchange="filterTable('clients-tbody','clients-search','clients-gst-filter','data-gsttype')">
+            <option value="">All GST Types</option><option value="regular">Regular</option><option value="composition">Composition</option><option value="unregistered">Unregistered</option><option value="isd">ISD</option>
+          </select>
+        </div>
+        <div class="mtable-wrap">
+          <table><thead><tr><th>#</th><th>Client Name</th><th>Trade Name</th><th>GSTIN</th><th>PAN</th><th>GST Type</th><th>Industry</th><th>Email</th><th>Phone</th><th>State</th><th>Created</th></tr></thead>
+          <tbody id="clients-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCUMENTS MODAL -->
+  <div class="modal-overlay" id="modal-documents">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📄 Documents Processing</div>
+        <button class="modal-close" onclick="closeModal('documents')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="mstats" id="docs-stats"></div>
+        <div class="mtabs">
+          <button class="mtab active" onclick="switchMTab(this,'docs-folders')">📁 Folders</button>
+          <button class="mtab" onclick="switchMTab(this,'docs-files')">📎 Recent Files</button>
+        </div>
+        <div class="mtab-panel active" id="docs-folders">
+          <div class="mcontrols"><div class="msearch"><span class="msearch-icon">🔍</span><input type="text" id="docs-search" placeholder="Search folders…" oninput="filterTable('docs-folder-tbody','docs-search')" /></div></div>
+          <div class="mtable-wrap"><table><thead><tr><th>#</th><th>Folder Name</th><th>Client</th><th>Type</th><th>Files</th><th>Created</th></tr></thead><tbody id="docs-folder-tbody"></tbody></table></div>
+        </div>
+        <div class="mtab-panel" id="docs-files">
+          <div class="mcontrols">
+            <div class="msearch"><span class="msearch-icon">🔍</span><input type="text" id="docs-file-search" placeholder="Search files…" oninput="filterTable('docs-file-tbody','docs-file-search')" /></div>
+            <select class="mfilter" id="docs-status-filter" onchange="filterTable('docs-file-tbody','docs-file-search','docs-status-filter','data-status')">
+              <option value="">All Status</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="completed">Completed</option><option value="failed">Failed</option>
+            </select>
+          </div>
+          <div class="mtable-wrap"><table><thead><tr><th>#</th><th>Filename</th><th>Client</th><th>Folder</th><th>Type</th><th>Size</th><th>Status</th><th>Uploaded</th></tr></thead><tbody id="docs-file-tbody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MASTERS MODAL -->
+  <div class="modal-overlay" id="modal-masters">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📚 Masters Data</div>
+        <button class="modal-close" onclick="closeModal('masters')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="mstats" id="masters-stats"></div>
+        <div class="mtabs">
+          <button class="mtab active" onclick="switchMTab(this,'masters-groups')">🏷️ Ledger Groups</button>
+          <button class="mtab" onclick="switchMTab(this,'masters-cl')">📚 Client Ledgers</button>
+          <button class="mtab" onclick="switchMTab(this,'masters-tally')">🗒️ Tally Ledgers</button>
+        </div>
+        <div class="mtab-panel active" id="masters-groups">
+          <div class="mcontrols"><div class="msearch"><span class="msearch-icon">🔍</span><input type="text" id="masters-g-search" placeholder="Search groups…" oninput="filterTable('masters-g-tbody','masters-g-search')" /></div></div>
+          <div class="mtable-wrap"><table><thead><tr><th>#</th><th>Group Name</th><th>Code</th><th>Nature</th><th>Description</th></tr></thead><tbody id="masters-g-tbody"></tbody></table></div>
+        </div>
+        <div class="mtab-panel" id="masters-cl">
+          <div class="mcontrols"><div class="msearch"><span class="msearch-icon">🔍</span><input type="text" id="masters-cl-search" placeholder="Search client ledgers…" oninput="filterTable('masters-cl-tbody','masters-cl-search')" /></div></div>
+          <div class="mtable-wrap"><table><thead><tr><th>#</th><th>Ledger Name</th><th>Client</th><th>Group</th><th>Sub-Category</th><th>Opening Bal</th><th>Custom?</th><th>Status</th></tr></thead><tbody id="masters-cl-tbody"></tbody></table></div>
+        </div>
+        <div class="mtab-panel" id="masters-tally">
+          <div class="mcontrols"><div class="msearch"><span class="msearch-icon">🔍</span><input type="text" id="masters-t-search" placeholder="Search tally ledgers…" oninput="filterTable('masters-t-tbody','masters-t-search')" /></div></div>
+          <div class="mtable-wrap"><table><thead><tr><th>#</th><th>Ledger Name</th><th>Client</th><th>Group</th><th>Tax Cat</th><th>GSTIN</th><th>Opening Bal</th><th>Status</th></tr></thead><tbody id="masters-t-tbody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS MODAL -->
+  <div class="modal-overlay" id="modal-transactions">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">💰 Transactions System</div>
+        <button class="modal-close" onclick="closeModal('transactions')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="mstats" id="txn-stats"></div>
+        <div class="mtabs">
+          <button class="mtab active" onclick="switchMTab(this,'txn-jobs')">📤 Upload Jobs</button>
+          <button class="mtab" onclick="switchMTab(this,'txn-vouchers')">🧾 Tally Vouchers</button>
+        </div>
+        <div class="mtab-panel active" id="txn-jobs">
+          <div class="mcontrols">
+            <div class="msearch"><span class="msearch-icon">🔍</span><input type="text" id="txn-j-search" placeholder="Search filename, client…" oninput="filterTable('txn-j-tbody','txn-j-search')" /></div>
+            <select class="mfilter" id="txn-s-filter" onchange="filterTable('txn-j-tbody','txn-j-search','txn-s-filter','data-status')">
+              <option value="">All Status</option><option value="uploaded">Uploaded</option><option value="parsed">Parsed</option><option value="ready">Ready</option><option value="approved">Approved</option><option value="failed">Failed</option>
+            </select>
+          </div>
+          <div class="mtable-wrap"><table><thead><tr><th>#</th><th>Filename</th><th>Client</th><th>Type</th><th>Rows</th><th>Status</th><th>Uploaded By</th><th>Date</th></tr></thead><tbody id="txn-j-tbody"></tbody></table></div>
+        </div>
+        <div class="mtab-panel" id="txn-vouchers">
+          <div class="mcontrols"><div class="msearch"><span class="msearch-icon">🔍</span><input type="text" id="txn-v-search" placeholder="Search vouchers…" oninput="filterTable('txn-v-tbody','txn-v-search')" /></div></div>
+          <div class="mtable-wrap"><table><thead><tr><th>#</th><th>Type</th><th>Voucher #</th><th>Client</th><th>Party Ledger</th><th>Amount</th><th>Dr/Cr</th><th>Narration</th><th>Date</th></tr></thead><tbody id="txn-v-tbody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ENGINE SCRIPT -->
+  <script>
+    /* ── Badge helpers ─────────────────────────────── */
+    const B = {
+      green:  v => `<span class="badge bg-green">${v}</span>`,
+      blue:   v => `<span class="badge bg-blue">${v}</span>`,
+      amber:  v => `<span class="badge bg-amber2">${v}</span>`,
+      rose:   v => `<span class="badge bg-rose2">${v}</span>`,
+      gray:   v => `<span class="badge bg-gray2">${v}</span>`,
+      teal:   v => `<span class="badge bg-teal">${v}</span>`,
+    };
+    const gstBadge    = t => ({regular:B.green("Regular"),composition:B.blue("Composition"),unregistered:B.gray("Unregistered")}[t] || B.amber(t));
+    const statusBadge = s => ({active:B.green("Active"),pending:B.amber("Pending"),processing:B.teal("Processing"),completed:B.green("Completed"),failed:B.rose("Failed"),approved:B.green("Approved"),ready:B.blue("Ready"),uploaded:B.gray("Uploaded"),parsed:B.teal("Parsed")}[s] || B.gray(s));
+
+    /* ── Modal open/close ──────────────────────────── */
+    const _loaded = {};
+    function openModal(name) {
+      document.getElementById("modal-" + name).classList.add("open");
+      document.body.style.overflow = "hidden";
+      if (!_loaded[name]) { loadModal(name); _loaded[name] = true; }
+    }
+    function closeModal(name) {
+      document.getElementById("modal-" + name).classList.remove("open");
+      document.body.style.overflow = "";
+    }
+    document.querySelectorAll(".modal-overlay").forEach(o =>
+      o.addEventListener("click", e => { if (e.target === o) { o.classList.remove("open"); document.body.style.overflow = ""; }})
+    );
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") document.querySelectorAll(".modal-overlay.open").forEach(o => { o.classList.remove("open"); document.body.style.overflow = ""; });
+    });
+
+    /* ── Tab switcher ──────────────────────────────── */
+    function switchMTab(btn, panelId) {
+      const wrap = btn.closest(".modal-body");
+      wrap.querySelectorAll(".mtab").forEach(b => b.classList.remove("active"));
+      wrap.querySelectorAll(".mtab-panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(panelId).classList.add("active");
+    }
+
+    /* ── Generic table filter ──────────────────────── */
+    function filterTable(tbodyId, searchId, filterId, filterAttr) {
+      const q    = (document.getElementById(searchId)?.value || "").toLowerCase();
+      const fval = filterId ? (document.getElementById(filterId)?.value || "").toLowerCase() : "";
+      document.getElementById(tbodyId)?.querySelectorAll("tr").forEach(row => {
+        const ok = row.innerText.toLowerCase().includes(q) &&
+                   (!fval || !filterAttr || (row.getAttribute(filterAttr)||"").toLowerCase() === fval);
+        row.style.display = ok ? "" : "none";
+      });
+    }
+
+    /* ── Dispatcher ────────────────────────────────── */
+    function loadModal(name) {
+      if (name === "auth")         return loadAuth();
+      if (name === "clients")      return loadClients();
+      if (name === "documents")    return loadDocuments();
+      if (name === "masters")      return loadMasters();
+      if (name === "transactions") return loadTransactions();
+    }
+
+    /* ── AUTH ──────────────────────────────────────── */
+    async function loadAuth() {
+      const tbody = document.getElementById("auth-tbody");
+      tbody.innerHTML = `<tr><td colspan="9"><div class="spinner">⏳</div></td></tr>`;
+      try {
+        const d = await fetch("/dashboard/api/users/").then(r=>r.json());
+        document.getElementById("auth-stats").innerHTML = `
+          <div class="mstat"><div class="mstat-val">${d.total}</div><div class="mstat-lbl">Total Users</div></div>
+          <div class="mstat"><div class="mstat-val">${d.users.filter(u=>u.is_active).length}</div><div class="mstat-lbl">Active</div></div>
+          <div class="mstat"><div class="mstat-val">${d.users.filter(u=>u.is_staff).length}</div><div class="mstat-lbl">Staff</div></div>
+          <div class="mstat"><div class="mstat-val">${d.users.filter(u=>u.is_superuser).length}</div><div class="mstat-lbl">Superusers</div></div>`;
+        tbody.innerHTML = d.users.length ? d.users.map((u,i) => `
+          <tr data-role="${u.role}">
+            <td style="color:#6b7280">${i+1}</td>
+            <td class="td-main">${u.username}</td>
+            <td style="font-size:.78rem">${u.email||"—"}</td>
+            <td style="font-size:.78rem">${[u.first_name,u.last_name].filter(Boolean).join(" ")||"—"}</td>
+            <td>${u.is_superuser?B.amber("Superuser"):u.is_staff?B.blue("Staff"):B.gray("User")}</td>
+            <td><button class="toggle-btn ${u.is_active?"toggle-on":"toggle-off"}" onclick="toggleActive(${u.id},${!u.is_active},this)">${u.is_active?"Active":"Inactive"}</button></td>
+            <td style="font-size:.76rem;color:#6b7280">${u.date_joined}</td>
+            <td style="font-size:.76rem;color:#6b7280">${u.last_login}</td>
+            <td><div class="pwd-form"><input type="password" id="pwd-${u.id}" placeholder="New password"/><button class="pwd-btn" onclick="setPassword(${u.id})">Set</button></div></td>
+          </tr>`).join("") : `<tr><td colspan="9" class="empty-msg">No users found.</td></tr>`;
+      } catch(e) { tbody.innerHTML = `<tr><td colspan="9" class="empty-msg">⚠️ ${e.message}</td></tr>`; }
+    }
+    async function toggleActive(id, state, btn) {
+      try {
+        const d = await fetch(`/dashboard/api/users/${id}/`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({is_active:state})}).then(r=>r.json());
+        if (d.ok) { btn.textContent=state?"Active":"Inactive"; btn.className=`toggle-btn ${state?"toggle-on":"toggle-off"}`; btn.onclick=()=>toggleActive(id,!state,btn); }
+      } catch(e) { alert("Failed: "+e.message); }
+    }
+    async function setPassword(id) {
+      const inp = document.getElementById("pwd-"+id);
+      const pwd = inp.value.trim();
+      if (!pwd) { alert("Enter a password."); return; }
+      try {
+        const d = await fetch(`/dashboard/api/users/${id}/set-password/`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pwd})}).then(r=>r.json());
+        if (d.ok) { inp.value=""; alert("✅ Password updated."); } else alert("⚠️ "+(d.error||"Failed"));
+      } catch(e) { alert("Error: "+e.message); }
+    }
+
+    /* ── CLIENTS ───────────────────────────────────── */
+    async function loadClients() {
+      const tbody = document.getElementById("clients-tbody");
+      tbody.innerHTML = `<tr><td colspan="11"><div class="spinner">⏳</div></td></tr>`;
+      try {
+        const d = await fetch("/dashboard/api/clients/").then(r=>r.json());
+        document.getElementById("clients-stats").innerHTML = `
+          <div class="mstat"><div class="mstat-val">${d.total}</div><div class="mstat-lbl">Total Clients</div></div>
+          <div class="mstat"><div class="mstat-val">${d.clients.filter(c=>c.gstin).length}</div><div class="mstat-lbl">With GSTIN</div></div>
+          <div class="mstat"><div class="mstat-val">${d.clients.filter(c=>c.pan).length}</div><div class="mstat-lbl">With PAN</div></div>`;
+        tbody.innerHTML = d.clients.length ? d.clients.map((c,i) => `
+          <tr data-gsttype="${c.gst_type}">
+            <td style="color:#6b7280">${i+1}</td>
+            <td class="td-main">${c.name}</td>
+            <td>${c.trade_name||"—"}</td>
+            <td style="font-family:monospace;font-size:.77rem">${c.gstin||"—"}</td>
+            <td style="font-family:monospace;font-size:.77rem">${c.pan||"—"}</td>
+            <td>${gstBadge(c.gst_type)}</td>
+            <td>${c.industry_type?B.blue(c.industry_type):"—"}</td>
+            <td style="font-size:.78rem">${c.email||"—"}</td>
+            <td style="font-family:monospace;font-size:.77rem">${c.phone||"—"}</td>
+            <td>${c.state||"—"}</td>
+            <td style="font-size:.76rem;color:#6b7280">${c.created_at}</td>
+          </tr>`).join("") : `<tr><td colspan="11" class="empty-msg">No clients found.</td></tr>`;
+      } catch(e) { tbody.innerHTML = `<tr><td colspan="11" class="empty-msg">⚠️ ${e.message}</td></tr>`; }
+    }
+
+    /* ── DOCUMENTS ─────────────────────────────────── */
+    async function loadDocuments() {
+      const ft=document.getElementById("docs-folder-tbody"), rf=document.getElementById("docs-file-tbody");
+      ft.innerHTML=`<tr><td colspan="6"><div class="spinner">⏳</div></td></tr>`;
+      rf.innerHTML=`<tr><td colspan="8"><div class="spinner">⏳</div></td></tr>`;
+      try {
+        const d = await fetch("/dashboard/api/documents/").then(r=>r.json()), s=d.stats;
+        document.getElementById("docs-stats").innerHTML = `
+          <div class="mstat"><div class="mstat-val">${d.folders.length}</div><div class="mstat-lbl">Folders</div></div>
+          <div class="mstat"><div class="mstat-val">${s.total_files}</div><div class="mstat-lbl">Total Files</div></div>
+          <div class="mstat"><div class="mstat-val">${s.pending}</div><div class="mstat-lbl">Pending</div></div>
+          <div class="mstat"><div class="mstat-val">${s.completed}</div><div class="mstat-lbl">Processed</div></div>`;
+        ft.innerHTML = d.folders.length ? d.folders.map((f,i)=>`
+          <tr><td style="color:#6b7280">${i+1}</td><td class="td-main">📁 ${f.name}</td><td>${f.client}</td>
+          <td>${f.is_default?B.blue(f.default_type||"Default"):B.gray("Custom")}</td><td>${f.file_count}</td>
+          <td style="font-size:.76rem;color:#6b7280">${f.created_at}</td></tr>`).join("") : `<tr><td colspan="6" class="empty-msg">No folders found.</td></tr>`;
+        rf.innerHTML = d.recent_files.length ? d.recent_files.map((f,i)=>`
+          <tr data-status="${f.processing_status}">
+            <td style="color:#6b7280">${i+1}</td>
+            <td class="td-main" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.original_filename}">${f.original_filename}</td>
+            <td>${f.client}</td><td>${f.folder_name}</td>
+            <td>${B.teal(f.file_type.toUpperCase())}</td>
+            <td style="font-size:.77rem">${f.file_size_kb} KB</td>
+            <td>${statusBadge(f.processing_status)}</td>
+            <td style="font-size:.76rem;color:#6b7280">${f.uploaded_at}</td>
+          </tr>`).join("") : `<tr><td colspan="8" class="empty-msg">No files found.</td></tr>`;
+      } catch(e) { ft.innerHTML=`<tr><td colspan="6" class="empty-msg">⚠️ ${e.message}</td></tr>`; }
+    }
+
+    /* ── MASTERS ───────────────────────────────────── */
+    async function loadMasters() {
+      const gb=document.getElementById("masters-g-tbody"), cl=document.getElementById("masters-cl-tbody"), tl=document.getElementById("masters-t-tbody");
+      gb.innerHTML=`<tr><td colspan="5"><div class="spinner">⏳</div></td></tr>`;
+      try {
+        const d = await fetch("/dashboard/api/masters/").then(r=>r.json());
+        document.getElementById("masters-stats").innerHTML = `
+          <div class="mstat"><div class="mstat-val">${d.ledger_groups.length}</div><div class="mstat-lbl">Ledger Groups</div></div>
+          <div class="mstat"><div class="mstat-val">${d.client_ledgers.length}</div><div class="mstat-lbl">Client Ledgers</div></div>
+          <div class="mstat"><div class="mstat-val">${d.tally_ledgers.length}</div><div class="mstat-lbl">Tally Ledgers</div></div>`;
+        gb.innerHTML = d.ledger_groups.length ? d.ledger_groups.map((g,i)=>`
+          <tr><td style="color:#6b7280">${i+1}</td><td class="td-main">${g.name}</td>
+          <td style="font-family:monospace;font-size:.77rem">${g.code}</td>
+          <td>${g.nature==="debit"?B.rose("Debit"):B.green("Credit")}</td>
+          <td style="font-size:.77rem;color:#8b8fa3">${g.description||"—"}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-msg">No groups.</td></tr>`;
+        cl.innerHTML = d.client_ledgers.length ? d.client_ledgers.map((l,i)=>`
+          <tr><td style="color:#6b7280">${i+1}</td><td class="td-main">${l.name}</td><td>${l.client_name}</td>
+          <td>${B.blue(l.group_name)}</td><td style="font-size:.77rem">${l.sub_category||"—"}</td>
+          <td style="font-family:monospace;font-size:.77rem">₹ ${l.opening_balance.toFixed(2)}</td>
+          <td>${l.is_custom?B.amber("Custom"):B.gray("Template")}</td>
+          <td>${l.is_active?B.green("Active"):B.rose("Inactive")}</td></tr>`).join("") : `<tr><td colspan="8" class="empty-msg">No client ledgers.</td></tr>`;
+        tl.innerHTML = d.tally_ledgers.length ? d.tally_ledgers.map((t,i)=>`
+          <tr><td style="color:#6b7280">${i+1}</td><td class="td-main">${t.name}</td><td>${t.client_name}</td>
+          <td>${B.teal(t.group||"—")}</td>
+          <td>${({gst:B.green("GST"),tds:B.amber("TDS"),tcs:B.blue("TCS")}[t.tax_category]||B.gray("None"))}</td>
+          <td style="font-family:monospace;font-size:.77rem">${t.gstin||"—"}</td>
+          <td style="font-family:monospace;font-size:.77rem">₹ ${t.opening_balance.toFixed(2)}</td>
+          <td>${t.is_active?B.green("Active"):B.rose("Inactive")}</td></tr>`).join("") : `<tr><td colspan="8" class="empty-msg">No tally ledgers.</td></tr>`;
+      } catch(e) { gb.innerHTML=`<tr><td colspan="5" class="empty-msg">⚠️ ${e.message}</td></tr>`; }
+    }
+
+    /* ── TRANSACTIONS ──────────────────────────────── */
+    async function loadTransactions() {
+      const jb=document.getElementById("txn-j-tbody"), vb=document.getElementById("txn-v-tbody");
+      jb.innerHTML=`<tr><td colspan="8"><div class="spinner">⏳</div></td></tr>`;
+      try {
+        const d = await fetch("/dashboard/api/transactions/").then(r=>r.json()), s=d.stats;
+        document.getElementById("txn-stats").innerHTML = `
+          <div class="mstat"><div class="mstat-val">${s.total_jobs}</div><div class="mstat-lbl">Total Jobs</div></div>
+          <div class="mstat"><div class="mstat-val">${s.ready_jobs}</div><div class="mstat-lbl">Ready</div></div>
+          <div class="mstat"><div class="mstat-val">${s.total_vouchers}</div><div class="mstat-lbl">Vouchers</div></div>`;
+        jb.innerHTML = d.jobs.length ? d.jobs.map((j,i)=>`
+          <tr data-status="${j.status}">
+            <td style="color:#6b7280">${i+1}</td>
+            <td class="td-main" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${j.original_filename}">${j.original_filename}</td>
+            <td>${j.client}</td><td>${B.teal(j.voucher_type)}</td>
+            <td style="text-align:center">${j.row_count}</td>
+            <td>${statusBadge(j.status)}</td>
+            <td>${j.uploaded_by}</td>
+            <td style="font-size:.76rem;color:#6b7280">${j.created_at}</td>
+          </tr>`).join("") : `<tr><td colspan="8" class="empty-msg">No upload jobs found.</td></tr>`;
+        vb.innerHTML = d.vouchers.length ? d.vouchers.map((v,i)=>`
+          <tr><td style="color:#6b7280">${i+1}</td><td>${B.blue(v.voucher_type)}</td>
+          <td style="font-family:monospace;font-size:.77rem">${v.voucher_number||"—"}</td>
+          <td>${v.client}</td><td class="td-main">${v.party_ledger_name}</td>
+          <td style="font-family:monospace;font-size:.77rem">₹ ${v.amount.toFixed(2)}</td>
+          <td>${v.is_debit?B.rose("Dr"):B.green("Cr")}</td>
+          <td style="font-size:.77rem;color:#8b8fa3;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.narration||"—"}</td>
+          <td style="font-size:.76rem;color:#6b7280">${v.date}</td></tr>`).join("") : `<tr><td colspan="9" class="empty-msg">No vouchers found.</td></tr>`;
+      } catch(e) { jb.innerHTML=`<tr><td colspan="8" class="empty-msg">⚠️ ${e.message}</td></tr>`; }
+    }
+  </script>
+
+</body>
+</html>
