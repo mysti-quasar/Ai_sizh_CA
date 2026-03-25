@@ -6,7 +6,8 @@ import api from "@/lib/api";
  * Tracks real-time Tally ERP/Prime connection status.
  */
 
-const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8001";
+const TALLY_CONNECTOR_URL =
+  process.env.NEXT_PUBLIC_TALLY_CONNECTOR_URL || "http://127.0.0.1:8765";
 
 interface TallyStatus {
   connected: boolean;
@@ -37,13 +38,27 @@ export const useTallyStore = create<TallyState>()((set, get) => ({
   isPolling: false,
 
   fetchStatus: async (clientId: string) => {
+    void clientId;
     try {
-      const res = await fetch(`${FASTAPI_URL}/tally/status/${clientId}`);
+      const res = await fetch(`${TALLY_CONNECTOR_URL}/tally/status`);
+      if (!res.ok) {
+        throw new Error(`Status request failed: ${res.status}`);
+      }
       const data = await res.json();
+
+      const connected =
+        typeof data.connected === "boolean"
+          ? data.connected
+          : Boolean(data.running);
+      const companyName =
+        (typeof data.company_name === "string" && data.company_name) ||
+        (typeof data.companyName === "string" && data.companyName) ||
+        null;
+
       set({
         status: {
-          connected: data.connected ?? false,
-          companyName: data.company_name ?? null,
+          connected,
+          companyName,
           tallyVersion: data.tally_version ?? null,
           connectedAt: data.connected_at ?? null,
         },
@@ -72,14 +87,14 @@ export const useTallyStore = create<TallyState>()((set, get) => ({
 
   syncLedgers: async (clientId: string) => {
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "";
-    await fetch(`${FASTAPI_URL}/tally/sync-ledgers/${clientId}?token=${token}`, {
+    await fetch(`${TALLY_CONNECTOR_URL}/tally/sync-ledgers/${clientId}?token=${token}`, {
       method: "POST",
     });
   },
 
   syncItems: async (clientId: string) => {
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "";
-    await fetch(`${FASTAPI_URL}/tally/sync-items/${clientId}?token=${token}`, {
+    await fetch(`${TALLY_CONNECTOR_URL}/tally/sync-items/${clientId}?token=${token}`, {
       method: "POST",
     });
   },

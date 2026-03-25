@@ -23,6 +23,19 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+
+      const persistedClientState = localStorage.getItem("sizh-ca-client");
+      if (persistedClientState) {
+        try {
+          const parsed = JSON.parse(persistedClientState);
+          const activeClientId = parsed?.state?.activeClient?.id;
+          if (activeClientId) {
+            config.headers["X-Client-ID"] = activeClientId;
+          }
+        } catch {
+          // Ignore malformed persisted state; request can continue without header.
+        }
+      }
     }
     return config;
   },

@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Q
 
+from clients.models import ClientProfile
 from .models import TallyLedger, TallyItem, Rule, LedgerGroup, LedgerTemplate, ClientLedger
 from .serializers import (
     TallyLedgerSerializer,
@@ -29,7 +30,18 @@ class ActiveClientMixin:
     """Scope all queries to the user's active client profile."""
 
     def get_active_client(self):
-        return self.request.user.active_client_profile
+        active = self.request.user.active_client_profile
+        if active:
+            return active
+
+        client_id = self.request.headers.get("X-Client-ID")
+        if client_id:
+            try:
+                return ClientProfile.objects.get(id=client_id)
+            except ClientProfile.DoesNotExist:
+                return None
+
+        return None
 
 
 # ── Ledgers ──────────────────────────────────────────────────────────────────

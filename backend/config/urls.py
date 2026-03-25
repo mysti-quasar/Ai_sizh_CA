@@ -239,6 +239,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("accounts.urls")),
     path("api/clients/", include("clients.urls")),
+    path("api/connector/", include("masters.connector_urls")),
     path("api/documents/", include("documents.urls")),
     path("api/masters/", include("masters.urls")),
     path("api/transactions/", include("transactions.urls")),

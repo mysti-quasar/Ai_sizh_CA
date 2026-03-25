@@ -1,0 +1,10 @@
+# Dependencies required only for backend/tally_connector
+# Keep this separate from backend/requirements.txt
+
+fastapi==0.135.1
+pydantic==2.12.5
+httpx==0.28.1
+uvicorn==0.41.0
+python-decouple
+xmltodict
+

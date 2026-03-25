@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import api from "@/lib/api";
+import axios from "axios";
 
 /**
  * SIZH CA - Smart Ledger Management Store
@@ -197,7 +198,25 @@ export const useSmartLedgerStore = create<SmartLedgerState>()((set, get) => ({
         },
       });
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Save failed";
+      let msg = e instanceof Error ? e.message : "Save failed";
+      if (axios.isAxiosError(e)) {
+        const payload = e.response?.data;
+        if (typeof payload === "string") {
+          msg = payload;
+        } else if (payload?.error && typeof payload.error === "string") {
+          msg = payload.error;
+        } else if (payload?.detail && typeof payload.detail === "string") {
+          msg = payload.detail;
+        } else if (payload && typeof payload === "object") {
+          const firstKey = Object.keys(payload)[0];
+          const firstValue = firstKey ? payload[firstKey as keyof typeof payload] : null;
+          if (Array.isArray(firstValue) && firstValue.length > 0) {
+            msg = `${firstKey}: ${String(firstValue[0])}`;
+          } else if (typeof firstValue === "string") {
+            msg = `${firstKey}: ${firstValue}`;
+          }
+        }
+      }
       set({ isSaving: false, error: msg });
     }
   },

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import api from "@/lib/api";
+import axios from "axios";
 
 /**
  * SIZH CA - Client Profile Store (Zustand)
@@ -76,10 +77,32 @@ export const useClientStore = create<ClientState>()(
       },
 
       createClient: async (clientData) => {
-        const { data } = await api.post("/clients/", clientData);
-        const { clients } = get();
-        set({ clients: [...clients, data] });
-        return data;
+        try {
+          const { data } = await api.post("/clients/", clientData);
+          const { clients } = get();
+          set({ clients: [...clients, data] });
+          return data;
+        } catch (error: unknown) {
+          if (axios.isAxiosError(error) && error.response?.data) {
+            const payload = error.response.data;
+            if (typeof payload === "string") {
+              throw new Error(payload);
+            }
+            if (payload.error && typeof payload.error === "string") {
+              throw new Error(payload.error);
+            }
+
+            const firstKey = Object.keys(payload)[0];
+            const firstValue = firstKey ? payload[firstKey] : null;
+            if (Array.isArray(firstValue) && firstValue.length > 0) {
+              throw new Error(`${firstKey}: ${String(firstValue[0])}`);
+            }
+            if (typeof firstValue === "string") {
+              throw new Error(`${firstKey}: ${firstValue}`);
+            }
+          }
+          throw error;
+        }
       },
     }),
     {

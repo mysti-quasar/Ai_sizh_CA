@@ -14,9 +14,7 @@ export default function TallyStatusIndicator() {
   const { activeClient } = useClientStore();
 
   useEffect(() => {
-    if (activeClient?.id) {
-      startPolling(activeClient.id);
-    }
+    startPolling(activeClient?.id || "global");
     return () => stopPolling();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClient?.id]);

@@ -23,6 +23,7 @@ export default function Topbar() {
   const { user, logout } = useAuthStore();
   const { clients, activeClient, fetchClients, fetchActiveClient, switchClient } = useClientStore();
   const [showCreateClient, setShowCreateClient] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
 
   useEffect(() => {
     fetchClients().catch(() => {});
@@ -37,6 +38,17 @@ export default function Topbar() {
       console.error("Failed to switch client:", error);
     }
   };
+
+  const filteredClients = clients.filter((client) => {
+    const q = clientSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      client.name.toLowerCase().includes(q)
+      || (client.trade_name || "").toLowerCase().includes(q)
+      || (client.gstin || "").toLowerCase().includes(q)
+      || (client.phone || "").toLowerCase().includes(q)
+    );
+  });
 
   return (
     <>
@@ -92,12 +104,27 @@ export default function Topbar() {
             <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase">
               Client Profiles
             </div>
+            <div className="px-3 pb-2">
+              <div className="flex items-center gap-2 rounded-md border border-gray-200 px-2 py-1.5">
+                <Search className="h-3.5 w-3.5 text-gray-400" />
+                <input
+                  value={clientSearch}
+                  onChange={(e) => setClientSearch(e.target.value)}
+                  placeholder="Search client..."
+                  className="w-full bg-transparent text-xs text-gray-700 outline-none placeholder:text-gray-400"
+                />
+              </div>
+            </div>
             {clients.length === 0 ? (
               <div className="px-3 py-2 text-sm text-gray-500">
                 No clients yet. Create one in Settings.
               </div>
+            ) : filteredClients.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-gray-500">
+                No client found.
+              </div>
             ) : (
-              clients.map((client) => (
+              filteredClients.map((client) => (
                 <button
                   key={client.id}
                   onClick={() => handleClientSwitch(client.id)}

@@ -10,7 +10,7 @@ const GST_TYPES = [
   { value: "regular", label: "Regular" },
   { value: "composition", label: "Composition" },
   { value: "unregistered", label: "Unregistered" },
-  { value: "sez", label: "SEZ" },
+  { value: "isd", label: "Input Service Distributor (ISD)" },
 ];
 
 const INDUSTRY_TYPES = [
